@@ -28,12 +28,12 @@ for iter = 1:obj.maxSCFIter
         break;
     end
     fockVec = oeiVec + ... H
-        2 .* (teiForCoulomb * densVec) ... +2J
-        - (teiForExchange * densVec); ... -K
+        2 .* (teiForCoulomb * densVec) ... % +2J
+        - (teiForExchange * densVec); ... % -K
         
     % diis extropolate Fock matrix
-    cdiis.Push(fockVec, densVec);
-    adiis.Push(fockVec, densVec);
+    cdiis.Push(fockVec, densVec); % density must be idempotent
+    adiis.Push(fockVec, densVec); % Fock must be built from idempotent density
     if(cdiis.IAmBetter())
         fockSimVec = cdiis.Extrapolate();
     else

@@ -3,8 +3,7 @@ oeiVec = reshape(obj.kineticMat + obj.corePotentialMat, [], 1);
 teiForCoulomb = reshape(obj.twoElecIntegrals, length(oeiVec), []);
 teiForExchange = reshape(permute(obj.twoElecIntegrals, [1 3 2 4]), ...
     length(oeiVec), []);
-S_Half = sqrtm(obj.overlapMat);
-inv_S_Half = eye(size(obj.overlapMat)) / S_Half;
+inv_S_Half = eye(size(obj.overlapMat)) / sqrtm(obj.overlapMat);
 
 densVec = zeros(size(oeiVec));
 elecEnergy = 0;
@@ -28,12 +27,12 @@ for iter = 1:obj.maxSCFIter
         break;
     end
     fockVec = oeiVec + ... H
-        2 .* (teiForCoulomb * densVec) ... +2J
-        - (teiForExchange * densVec); ... -K
+        2 .* (teiForCoulomb * densVec) ... % +2J
+        - (teiForExchange * densVec); ... % -K
         
     % diis extropolate Fock matrix
-    cdiis.Push(fockVec, densVec);
-    ediis.Push(fockVec, densVec);
+    cdiis.Push(fockVec, densVec); % density must be idempotent
+    ediis.Push(fockVec, densVec); % Fock must be built from idempotent density
     if(cdiis.IAmBetter())
         fockSimVec = cdiis.Extrapolate();
     else
