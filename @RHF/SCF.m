@@ -11,7 +11,7 @@ elecEnergy = 0;
 
 % diis ediis
 cdiis = CDIIS(obj.overlapMat);
-ediis = EDIIS(oeiVec, densVec);
+ediis = EDIIS(oeiVec);
 
 fockVec = oeiVec;
 fockSimVec = fockVec;

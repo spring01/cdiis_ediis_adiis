@@ -9,15 +9,12 @@ classdef ADIIS < handle
     
     methods
         
-        function obj = ADIIS(initFockVector, initDensVector, numVectors)
-            if(nargin < 3)
+        function obj = ADIIS(initVector, numVectors)
+            if(nargin < 2)
                 numVectors = 5;
             end
-            obj.fockVectors = zeros(length(initFockVector), numVectors);
-            obj.densVectors = zeros(length(initFockVector), numVectors);
-            
-            obj.fockVectors(:, end) = initFockVector;
-            obj.densVectors(:, end) = initDensVector;
+            obj.fockVectors = zeros(numel(initVector), numVectors);
+            obj.densVectors = zeros(numel(initVector), numVectors);
         end
         
         function Push(obj, newFockVector, newDensVector)

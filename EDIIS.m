@@ -11,18 +11,14 @@ classdef EDIIS < handle
     
     methods
         
-        function obj = EDIIS(initFockVector, initDensVector, oeiVector, numVectors)
-            if(nargin < 3)
-                oeiVector = initFockVector;
-            end
-            if(nargin < 4)
+        function obj = EDIIS(oeiVector, numVectors)
+            oeiVector = reshape(oeiVector, [], 1);
+            if(nargin < 2)
                 numVectors = 5;
             end
-            obj.fockVectors = zeros(length(initFockVector), numVectors);
-            obj.densVectors = zeros(length(initFockVector), numVectors);
+            obj.fockVectors = zeros(length(oeiVector), numVectors);
+            obj.densVectors = zeros(length(oeiVector), numVectors);
             
-            obj.fockVectors(:, end) = initFockVector;
-            obj.densVectors(:, end) = initDensVector;
             obj.oeiVector = oeiVector;
         end
         
