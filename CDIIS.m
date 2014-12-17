@@ -5,8 +5,7 @@ classdef CDIIS < handle
         fockVectors;
         errorCommutatorVectors;
         
-        overlapMatrix;
-        inv_S_Half;
+        S_Half;
         
         startError = 1e-2;
         
@@ -21,8 +20,7 @@ classdef CDIIS < handle
             obj.fockVectors = zeros(numel(overlapMatrix), numVectors);
             obj.errorCommutatorVectors = zeros(numel(overlapMatrix), numVectors);
             
-            obj.overlapMatrix = overlapMatrix;
-            obj.inv_S_Half = eye(size(overlapMatrix)) / sqrtm(overlapMatrix);
+            obj.S_Half = sqrtm(overlapMatrix);
         end
         
         function Push(obj, newFockVector, newDensVector)
@@ -37,11 +35,12 @@ classdef CDIIS < handle
             % push new commutator error in
             obj.errorCommutatorVectors(:, 1:end-1) = obj.errorCommutatorVectors(:, 2:end);
             
-            FDS = reshape(newFockVector, sqrt(length(newFockVector)), []) ...
+            FtDt = obj.S_Half ...
+                \ reshape(newFockVector, sqrt(length(newFockVector)), []) ...
                 * reshape(newDensVector, sqrt(length(newDensVector)), []) ...
-                * obj.overlapMatrix;
+                * obj.S_Half;
             obj.errorCommutatorVectors(:, end) = ...
-                reshape(obj.inv_S_Half*(FDS - FDS')*obj.inv_S_Half, [], 1);
+                reshape(FtDt - FtDt', [], 1);
         end
         
         function better = IAmBetter(obj) % than EDIIS
