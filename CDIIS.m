@@ -7,7 +7,7 @@ classdef CDIIS < handle
         
         S_Half;
         
-        startError = 1e-2;
+        startError = 1;
         
     end
     
@@ -55,11 +55,21 @@ classdef CDIIS < handle
             % warning('off', 'MATLAB:nearlySingularMatrix');
             
             onesVec = ones(obj.NumVectors(),1);
-            diisCoefficients = ...
-                [obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
-                onesVec', 0] ...
-                \ [zeros(obj.NumVectors(),1); 1];
-            newFockVector = obj.fockVectors * diisCoefficients(1:end-1);
+            hessian = [ ...
+                obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
+                onesVec', 0];
+            useFockIndices = 1:obj.NumVectors();
+            for i = 1:obj.NumVectors()-1
+                if(rcond(hessian) > 1e-16)
+                    break;
+                else
+                    hessian = hessian(2:end, 2:end);
+                    useFockIndices = useFockIndices(2:end);
+                end
+            end
+            diisCoefficients = hessian \ [zeros(length(useFockIndices),1); 1];
+            newFockVector = obj.fockVectors(:,useFockIndices) ...
+                * diisCoefficients(1:end-1);
         end
         
     end
