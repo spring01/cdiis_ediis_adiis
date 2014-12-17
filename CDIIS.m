@@ -52,8 +52,6 @@ classdef CDIIS < handle
         end
         
         function newFockVector = Extrapolate(obj)
-            % warning('off', 'MATLAB:nearlySingularMatrix');
-            
             onesVec = ones(obj.NumVectors(),1);
             hessian = [ ...
                 obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
