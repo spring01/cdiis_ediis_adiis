@@ -46,21 +46,16 @@ classdef EDIIS < handle
             hessian = zeros(obj.NumVectors());
             for i = 1:obj.NumVectors()
                 for j = 1:obj.NumVectors();
-                    hessian(i,j) ...
+                    hessian(j, i) ...
                         = (obj.fockVectors(:, i) - obj.fockVectors(:, j))' ...
                         * (obj.densVectors(:, i) - obj.densVectors(:, j));
                 end
             end
             hessian = -hessian;
             
-            % matlab's QP solver (seems it's rgd and slow)
-            coeffs = [zeros(obj.NumVectors()-1,1); 1];
-            QPoptions = optimoptions('quadprog', 'Algorithm', 'active-set', 'Display', 'off');
-            coeffs = quadprog(hessian, firstOrder, ...
-                [], [], ...
-                ones(1,obj.NumVectors()), 1, ...
-                zeros(obj.NumVectors(),1), [], ...
-                coeffs, QPoptions);
+            % reduced gradient
+            coeffs = obj.ReducedGradient( ...
+                hessian, firstOrder, [zeros(obj.NumVectors()-1,1); 1]);
             
             newFockVector = obj.fockVectors * coeffs;
         end
@@ -71,6 +66,56 @@ classdef EDIIS < handle
         
         function num = NumVectors(obj)
             num = size(obj.fockVectors, 2);
+        end
+        
+        function varFull = ReducedGradient(obj, hessian, firstOrder, iniPoint)
+            indDep = 1;
+            indAct = 1:obj.NumVectors();
+            indAct = indAct(indAct~=indDep);
+            varFull = iniPoint;
+            constr = ones(1, obj.NumVectors());
+            for iter = 1:2000
+                varDep = varFull(indDep);
+                varAct = varFull(indAct);
+                constrDep = constr(indDep);
+                constrAct = constr(indAct);
+                
+                grad = firstOrder + hessian*varFull;
+                gradDep = grad(indDep);
+                gradAct = grad(indAct);
+                
+                redGrad = gradAct - constrAct'/constrDep*gradDep;
+                
+                delVarAct = zeros(4,1);
+                delVarAct(redGrad<0) = -redGrad(redGrad<0);
+                delVarAct(varAct>0) = -redGrad(varAct>0);
+                
+                if(norm(delVarAct) < 1e-8)
+                    break;
+                end
+                
+                stepSize = 2 ./ (2 + iter);
+                varActSim = varAct + stepSize .* delVarAct;
+                delVarAct(varActSim<0) = 0;
+                
+                delVarDep = - constrDep \ constrAct * delVarAct;
+                varDepSim = varDep + stepSize .* delVarDep;
+                
+                if(varDepSim < 0)
+                    strPos = indAct(varActSim>0);
+                    indDep = strPos(1);
+                    indAct = 1:obj.NumVectors();
+                    indAct = indAct(indAct~=indDep);
+                    continue;
+                end
+                
+                delVarFull = zeros(obj.NumVectors(), 1);
+                delVarFull(indDep) = delVarDep;
+                delVarFull(indAct) = delVarAct;
+                
+                varFull = varFull + stepSize .* delVarFull;
+                
+            end
         end
         
     end
