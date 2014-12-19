@@ -86,7 +86,7 @@ classdef EDIIS < handle
                 
                 redGrad = gradAct - constrAct'/constrDep*gradDep;
                 
-                delVarAct = zeros(4,1);
+                delVarAct = zeros(obj.NumVectors()-1,1);
                 delVarAct(redGrad<0) = -redGrad(redGrad<0);
                 delVarAct(varAct>0) = -redGrad(varAct>0);
                 
